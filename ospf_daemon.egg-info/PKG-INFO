@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: ospf_daemon
+Version: 0.1
+Summary: Daemon OSPFv2 educativo en Python con visualización en tiempo real
+Author: Tu Nombre
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Topic :: System :: Networking
+Requires-Python: >=3.7
+Requires-Dist: dash
+Requires-Dist: dash-cytoscape
+Requires-Dist: networkx
+Requires-Dist: matplotlib
+Dynamic: author
+Dynamic: classifier
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
