@@ -30,3 +30,5 @@ class LSDB:
             for link_id, _, _, metric in data['links']:
                 result[r].append((link_id, metric))
         return result
+
+lsdb = LSDB()

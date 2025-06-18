@@ -61,22 +61,45 @@ class RouterLSA:
 
     @staticmethod
     def parse(data):
-        age, lsa_type, _, lsa_id, adv_router, seq_num, checksum, length = struct.unpack("!HBB4s4sI2sH", data[:20])
-        flags_links = struct.unpack("!B3xH", data[20:24])
-        flags = flags_links[0]
-        num_links = flags_links[1]
-        links = []
-        offset = 24
-        for _ in range(num_links):
-            link_id = bytes_to_ip(data[offset:offset+4])
-            link_data = bytes_to_ip(data[offset+4:offset+8])
-            link_type, _, metric = struct.unpack("!BBH", data[offset+8:offset+12])
-            links.append((link_id, link_data, link_type, metric))
-            offset += 12
-        return {
-            'lsa_id': bytes_to_ip(lsa_id),
-            'adv_router': bytes_to_ip(adv_router),
-            'seq': seq_num,
-            'checksum': checksum,
-            'links': links
-        }
+        print(f"[🔍] Intentando parsear LSA de {len(data)} bytes")
+
+        if len(data) < 20:
+            raise ValueError(f"LSA demasiado corto: se esperaban al menos 20 bytes, se recibieron {len(data)}")
+
+        try:
+            num_lsa = struct.unpack("!HH", data[:4])
+            data = data[4:]
+            age, options, lsa_type = struct.unpack("!HBB", data[:4])
+            lsa_id = socket.inet_ntoa(data[4:8])
+            adv_router = socket.inet_ntoa(data[8:12])
+            seq = struct.unpack("!I", data[12:16])[0]
+            checksum, length = struct.unpack("!HH", data[16:20])
+            print(checksum)
+            print(length)
+            #length, checksum  = struct.unpack("!HH", data[16:20])
+
+            if len(data) < length:
+                raise ValueError(f"LSA incompleto: se esperaban {length} bytes, se recibieron {len(data)}")
+
+            # Enlace de datos (simplificado: cada uno 12 bytes)
+            links = []
+            offset = 20
+            while offset + 12 <= len(data):
+                to = socket.inet_ntoa(data[offset:offset+4])
+                mask = socket.inet_ntoa(data[offset+4:offset+8])
+                metric = struct.unpack("!I", data[offset+8:offset+12])[0]
+                links.append((to, mask, metric))
+                offset += 12
+
+            return {
+                "type": lsa_type,
+                "lsa_id": lsa_id,
+                "adv_router": adv_router,
+                "seq": seq,
+                "checksum": checksum,
+                "length": length,
+                "links": links
+            }
+
+        except struct.error as e:
+            raise ValueError(f"Error desempaquetando LSA: {e}")
