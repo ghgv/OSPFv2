@@ -2,6 +2,7 @@ import heapq
 from collections import defaultdict
 
 def compute_spf(graph, origin):
+    print("SFP")
     dist = defaultdict(lambda: float('inf'))
     prev = {}
     visited = set()

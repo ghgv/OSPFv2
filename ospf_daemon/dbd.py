@@ -44,6 +44,7 @@ def parse_dbd(pkt):
             "adv_router": adv_router,
             "seq": seq_num
         })
+        print(headers)
         offset += 20
 
     return headers
@@ -92,8 +93,8 @@ def build_dbd_packet(router_id, mtu=1500, options=2, flags=0x07, seq=0x80000001,
     pkt = pkt[:12] + struct.pack("H", chksum) + pkt[14:] #siempre sin ! (no !H)
 
     # === Agregar cabecera IP ===
-    #ip_hdr = build_ip_header(IP_SALIDA, "224.0.0.5", len(pkt))
-    ip_hdr = build_ip_header(IP_SALIDA, "192.168.3.1", len(pkt))
+    ip_hdr = build_ip_header(IP_SALIDA, "224.0.0.5", len(pkt))
+    #ip_hdr = build_ip_header(IP_SALIDA, "192.168.3.1", len(pkt))
     return ip_hdr + pkt
 
 
@@ -104,7 +105,7 @@ def handle_dbd(pkt, source_ip):
 
         for h in headers:
             lsa_id = (h['type'], h['lsa_id'], h['adv_router'])
-            if lsa_id not in lsdb:
+            if lsa_id not in lsdb.db.items():
                 print(f"[📥] Falta LSA {lsa_id}, se solicitará")
                 missing.append(h)
 
@@ -117,6 +118,8 @@ def handle_dbd(pkt, source_ip):
                 print(f"[📤] LSR enviado a {source_ip} con {len(missing)} solicitudes")
         else:
             print("[✔️] Todas las LSAs ya están presentes")
+            
+
 
     except Exception as e:
         print(f"[⚠️] Error al manejar DBD: {e}")

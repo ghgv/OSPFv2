@@ -14,7 +14,8 @@ def send_lsa_periodically():
     seq = 0x80000001
     while True:
         vecinos = list(lsdb.db.keys())
-        links = [(v, "10.0.0.1", 1, 10) for v in vecinos]
+        print(vecinos)
+        links = [(v, "192.168.3.3", 1, 10) for v in vecinos]
         pkt = RouterLSA(ROUTER_ID, links, seq).build()
         sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
         sock.sendto(pkt, ("224.0.0.5", 0))
@@ -33,6 +34,7 @@ def receive_ospf_packets():
             continue
         if tipo == 4:
             lsa_data = data[24:]
+            print("---->",data)
             try:
                 info = RouterLSA.parse(lsa_data)
                 lsdb.add_lsa(info)

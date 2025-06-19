@@ -61,16 +61,17 @@ def receive_ospf_packets():
                 # Aquí podrías también guardar tiempo del último hello recibido
             if tipo == 2:  # Tipo DB description
                 vecino = addr[0]
-                print(f"[💬] DB description  recibido en interfaz {vecino}")
+                print(f"[💬] DB description  recibido en interfaz {vecino}.")
                 rt.add_interface(vecino, "enp4s0")  # Se asume 'eth0' como interfaz
                 src_ip = ".".join(map(str, raw_data[26:30]))
                 handle_dbd(ospf_packet, src_ip)
                 # Aquí podrías también guardar tiempo del último hello recibido
-            if tipo == 4:
-                print
+            if tipo == 4: #Tipo LSA Update
                 lsa_data = ospf_packet[24:]
+                #print("lsadata",lsa_data)
                 try:
                     info = RouterLSA.parse(lsa_data)
+                    print("info:->",info)
                     lsdb.add_lsa(info)
                     rt.add_interface(info['adv_router'], "enp4s0")
                 except Exception as e:
@@ -78,9 +79,11 @@ def receive_ospf_packets():
 
 def calcular_rutas():
     while True:
-        print(lsdb.db)
+        print("LSDB->",lsdb.db)
         lsdb.purge_expired()
+        print("LSDB--->",lsdb.db)
         rutas = compute_spf(lsdb.get_links(), ROUTER_ID)
+        print("rutas",rutas)
         rt.load_from_spf(rutas)
         print("Rutas:")
         for dst, info in rutas.items():

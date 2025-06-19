@@ -20,7 +20,9 @@ class LSDB:
     def purge_expired(self):
         now = time.time()
         expired = [r for r, data in self.db.items() if now - data['timestamp'] > MAX_AGE]
+        print("deleteing",r)
         for r in expired:
+            print("deleteing",r)
             del self.db[r]
 
     def get_links(self):

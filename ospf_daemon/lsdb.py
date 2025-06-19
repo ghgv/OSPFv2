@@ -1,12 +1,13 @@
 import time
 
-MAX_AGE = 3600
+MAX_AGE = 1
 
 class LSDB:
     def __init__(self):
         self.db = {}
 
     def add_lsa(self, lsa_dict):
+        
         adv = lsa_dict['adv_router']
         seq = lsa_dict['seq']
         now = time.time()
@@ -27,7 +28,7 @@ class LSDB:
         result = {}
         for r, data in self.db.items():
             result[r] = []
-            for link_id, _, _, metric in data['links']:
+            for link_id, mask, metric in data['links']:
                 result[r].append((link_id, metric))
         return result
 

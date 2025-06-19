@@ -33,5 +33,5 @@ def build_ip_header(src_ip, dst_ip, payload_len):
         version_ihl, tos, total_len, ident, flags_frag,
         ttl, proto, chksum, src, dst
     )
-    print("Header",header)
+    
     return header

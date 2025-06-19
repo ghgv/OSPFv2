@@ -74,20 +74,18 @@ class RouterLSA:
             adv_router = socket.inet_ntoa(data[8:12])
             seq = struct.unpack("!I", data[12:16])[0]
             checksum, length = struct.unpack("!HH", data[16:20])
-            print(checksum)
-            print(length)
-            #length, checksum  = struct.unpack("!HH", data[16:20])
-
+            
             if len(data) < length:
                 raise ValueError(f"LSA incompleto: se esperaban {length} bytes, se recibieron {len(data)}")
 
             # Enlace de datos (simplificado: cada uno 12 bytes)
             links = []
-            offset = 20
+            offset = 24 #El header de OSPF es 24 bytes
             while offset + 12 <= len(data):
                 to = socket.inet_ntoa(data[offset:offset+4])
                 mask = socket.inet_ntoa(data[offset+4:offset+8])
                 metric = struct.unpack("!I", data[offset+8:offset+12])[0]
+                print("to mask  mettri",to,mask,metric)
                 links.append((to, mask, metric))
                 offset += 12
 
