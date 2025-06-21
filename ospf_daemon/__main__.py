@@ -1,5 +1,5 @@
 from ospf_daemon.lsa import RouterLSA
-from ospf_daemon.lsdb import LSDB
+from ospf_daemon.lsdb import LSDB,lsdb
 from ospf_daemon.spf import compute_spf
 from ospf_daemon.dbd import handle_dbd,send_dbd_periodically
 from ospf_daemon.routing import RoutingTable
@@ -7,12 +7,13 @@ from ospf_daemon.webviz import iniciar_dashboard
 from ospf_daemon.hello import send_hello_periodically
 from ospf_daemon.config import ROUTER_ID
 from ospf_daemon.hello import handle_hello
+from ospf_daemon.cli import cli
 
 
 import socket, threading, time
 
 #lsdb = LSDB()
-lsdb = LSDB()
+#lsdb = LSDB()
 
 rt = RoutingTable()
 
@@ -70,6 +71,7 @@ def receive_ospf_packets():
                 # Aquí podrías también guardar tiempo del último hello recibido
             if tipo == 4: #Tipo LSA Update
                 lsa_data = ospf_packet[24:]
+                print(f"[💬] Received LSA 4 ")
                 try:
                     info = RouterLSA.parse(lsa_data)
                     #print("info:->",info)
@@ -81,7 +83,7 @@ def receive_ospf_packets():
 def calcular_rutas():
     while True:
         print("LSDB->",lsdb.db)
-        lsdb.purge_expired()
+        #lsdb.purge_expired()
         print("LSDB--->",lsdb.db)
         rutas = compute_spf(lsdb.get_links(), "2.2.2.2")
         print("rutas",rutas)
@@ -103,6 +105,7 @@ def main():
     threading.Thread(target=receive_ospf_packets, daemon=True).start()
     threading.Thread(target=calcular_rutas, daemon=True).start()
     threading.Thread(target=send_dbd_periodically, daemon=True).start()
+    threading.Thread(target=cli, daemon=True).start()
     iniciar_dashboard(lsdb)
     simular_reenvio()
 

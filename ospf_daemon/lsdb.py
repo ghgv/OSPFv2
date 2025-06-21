@@ -1,6 +1,6 @@
 import time
 
-MAX_AGE = 1
+MAX_AGE = 3600
 
 class LSDB:
     def __init__(self):
@@ -11,12 +11,14 @@ class LSDB:
         adv = lsa_dict['adv_router']
         seq = lsa_dict['seq']
         now = time.time()
+        print("# In add lsa:",self.db)
         if adv not in self.db or seq > self.db[adv]['seq']:
             self.db[adv] = {
                 'seq': seq,
                 'timestamp': now,
                 'links': lsa_dict['links']
             }
+        print("# In add lsa:",self.db)
 
     def purge_expired(self):
         now = time.time()
