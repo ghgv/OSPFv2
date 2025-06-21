@@ -11,7 +11,9 @@ from ospf_daemon.hello import handle_hello
 
 import socket, threading, time
 
+#lsdb = LSDB()
 lsdb = LSDB()
+
 rt = RoutingTable()
 
 def send_lsa_periodically():
@@ -68,10 +70,9 @@ def receive_ospf_packets():
                 # Aquí podrías también guardar tiempo del último hello recibido
             if tipo == 4: #Tipo LSA Update
                 lsa_data = ospf_packet[24:]
-                #print("lsadata",lsa_data)
                 try:
                     info = RouterLSA.parse(lsa_data)
-                    print("info:->",info)
+                    #print("info:->",info)
                     lsdb.add_lsa(info)
                     rt.add_interface(info['adv_router'], "enp4s0")
                 except Exception as e:
@@ -82,7 +83,7 @@ def calcular_rutas():
         print("LSDB->",lsdb.db)
         lsdb.purge_expired()
         print("LSDB--->",lsdb.db)
-        rutas = compute_spf(lsdb.get_links(), ROUTER_ID)
+        rutas = compute_spf(lsdb.get_links(), "2.2.2.2")
         print("rutas",rutas)
         rt.load_from_spf(rutas)
         print("Rutas:")

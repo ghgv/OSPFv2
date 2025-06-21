@@ -62,7 +62,7 @@ def build_ospf_header(router_id, area_id, pkt_type, payload):
     return header + payload
 
 #def build_dbd_packet(router_id, mtu=1500, opts=0x02, flags=0x07, dd_seq=1):
-def build_dbd_packet(router_id, mtu=1500, options=2, flags=0x07, seq=0x80000001, lsa_headers=[]):
+def build_dbd_packet(router_id, mtu=1500, options=2, flags=0x07, seq=0x80000001, lsa_headers=[], rid=""):
     # === Cuerpo del DBD ===
     body = struct.pack("!HBBI", mtu, options, flags, seq)
     for h in lsa_headers:
@@ -93,7 +93,8 @@ def build_dbd_packet(router_id, mtu=1500, options=2, flags=0x07, seq=0x80000001,
     pkt = pkt[:12] + struct.pack("H", chksum) + pkt[14:] #siempre sin ! (no !H)
 
     # === Agregar cabecera IP ===
-    ip_hdr = build_ip_header(IP_SALIDA, "224.0.0.5", len(pkt))
+    print(rid)
+    ip_hdr = build_ip_header(IP_SALIDA, rid ,len(pkt))
     #ip_hdr = build_ip_header(IP_SALIDA, "192.168.3.1", len(pkt))
     return ip_hdr + pkt
 
@@ -142,8 +143,9 @@ def send_dbd_periodically():
                             "seq": lsa["seq"]
                         })
 
-                    pkt = build_dbd_packet(ROUTER_ID, seq=seq, lsa_headers=lsa_headers)
-                    sock.sendto(pkt, (ip, 0))
+                    pkt = build_dbd_packet(ROUTER_ID, seq=seq, lsa_headers=lsa_headers, rid=ip)
+                    e= sock.sendto(pkt, (ip, 0))
+                    print("DBD enviado: ",e)
                     print(f"[📤] DBD enviado a {ip} con {len(lsa_headers)} LSAs (seq={hex(seq)})")
                 except Exception as e:
                     print(f"[⚠️] Error enviando DBD a {ip}: {e}")

@@ -5,11 +5,12 @@ import time
 import array
 
 from ospf_daemon.config import ROUTER_ID, HELLO_INTERVAL, INTERFACES
-from ospf_daemon.neighbors import neighbors
+from ospf_daemon.neighbors import neighbors, vecinos
 from ospf_daemon.dbd import build_dbd_packet
 from ospf_daemon.build_ip import build_ip_header
+from ospf_daemon.config import IP_SALIDA
 
-IP_SALIDA = "192.168.3.3"
+#IP_SALIDA = "192.168.3.3"
 
 def ip_to_bytes(ip):
     return socket.inet_aton(ip)
@@ -86,7 +87,7 @@ def build_hello_packet1(router_id, neighbors=[]):
     netmask = ip_to_bytes("255.255.255.0")
     hello_interval = HELLO_INTERVAL
     options = 2
-    priority = 1
+    priority = PRIORITY
     dead_interval = hello_interval * 4
     dr = ip_to_bytes(router_id)
     bdr = ip_to_bytes("0.0.0.0")
@@ -128,7 +129,7 @@ def send_hello_periodically():
         print(f"[📣] Hello enviado desde {ROUTER_ID} por IP {IP_SALIDA}")
         time.sleep(HELLO_INTERVAL)
 
-def parse_hello_packet(pkt):
+def parse_hello_packet(pkt,int_ip=""):
     if len(pkt) < 44: return None
     router_id = ip_from_bytes(pkt[4:8])
     netmask = ip_from_bytes(pkt[24:28])
@@ -140,28 +141,33 @@ def parse_hello_packet(pkt):
     neighbors_list = []
     for i in range(44, len(pkt), 4):
         neighbors_list.append(ip_from_bytes(pkt[i:i+4]))
-    return {
-        "router_id": router_id, "netmask": netmask, "hello_interval": hello_interval,
-        "priority": priority, "dead_interval": dead_interval, "dr": dr, "bdr": bdr,
+    return router_id, {
+        "int_ip": int_ip,
+        "interface": "enp4s0",
+        "state": "init",
+        "netmask": netmask, 
+        "hello_interval": hello_interval,
+        "priority": priority, 
+        "dead_interval": dead_interval, 
+        "dr": dr, 
+        "bdr": bdr,
         "neighbors": neighbors_list
-    }
+        }
 
 def handle_hello(pkt, source_ip):
-    hello = parse_hello_packet(pkt)
-    if not hello:
+    rid , parameters = parse_hello_packet(pkt,int_ip=source_ip)
+    if not rid:
         print("Hello mal formado"); return
-    rid = hello['router_id']
+    
     if rid not in neighbors:
-        neighbors[rid] = {
-            "ip": source_ip, "interface": INTERFACES[0], "last_hello": time.time(),
-            "state": "Init", "dr": hello["dr"], "bdr": hello["bdr"], "priority": hello["priority"]
-        }
+        neighbors[rid] = parameters
         print(f"[👀] Nuevo vecino {rid} en estado Init")
-    if ROUTER_ID in hello["neighbors"]:
+    if ROUTER_ID in parameters["neighbors"]:
         if neighbors[rid]["state"] != "2-Way":
             neighbors[rid]["state"] = "2-Way"
             print(f"[🤝] Estado con {rid} → 2-Way (adyacencia posible)")
-            dbd_pkt = build_dbd_packet(ROUTER_ID) #,lsa_headers)
+            print("NEI",neighbors)
+            dbd_pkt = build_dbd_packet(ROUTER_ID,rid=neighbors[rid]["int_ip"]) #,lsa_headers)
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW) as s:
                     s.sendto(dbd_pkt, (source_ip, 0))

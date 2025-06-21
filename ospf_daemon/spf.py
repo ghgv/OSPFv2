@@ -4,7 +4,7 @@ from collections import defaultdict
 def compute_spf(graph, origin):
     
     if origin not in graph:
-        graph[origin] = [('192.168.3.0',1)] #Es necesario añadirlo porque el SFP no sabe que 3.0 y origen estan en la misma red
+        graph[origin] = [('192.168.3.3',1)] #Es necesario añadirlo porque el SFP no sabe que 3.0 y origen estan en la misma red
     print("SFP",graph,origin)
     dist = defaultdict(lambda: float('inf'))
     prev = {}

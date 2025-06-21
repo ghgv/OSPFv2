@@ -84,11 +84,11 @@ class RouterLSA:
             while offset + 12 <= len(data):
                 to = socket.inet_ntoa(data[offset:offset+4])
                 mask = socket.inet_ntoa(data[offset+4:offset+8])
-                metric = struct.unpack("!I", data[offset+8:offset+12])[0]
+                Link_Type,eTOS,metric = struct.unpack("!BBH", data[offset+8:offset+12])#[0]
                 print("to mask  mettri",to,mask,metric)
                 links.append((to, mask, metric))
                 offset += 12
-
+            print("type", lsa_type,"lsa_id", lsa_id, "adv_router", adv_router, "seq", hex(seq), "checksum", hex(checksum),"length", length,"links", links)
             return {
                 "type": lsa_type,
                 "lsa_id": lsa_id,
